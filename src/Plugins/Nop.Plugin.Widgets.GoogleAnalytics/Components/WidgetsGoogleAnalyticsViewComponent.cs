@@ -72,7 +72,7 @@ namespace Nop.Plugin.Widgets.GoogleAnalytics.Components
 
         #region Utilities
 
-        private string FixIllegalJavaScriptChars(string text)
+        private static string FixIllegalJavaScriptChars(string text)
         {
             if (string.IsNullOrEmpty(text))
                 return text;
@@ -209,7 +209,7 @@ namespace Nop.Plugin.Widgets.GoogleAnalytics.Components
                 //Special case, if we are in last step of checkout, we can use order total for conversion value
                 var isOrderCompletedPage = controller.ToString().Equals("checkout", StringComparison.InvariantCultureIgnoreCase) &&
                     action.ToString().Equals("completed", StringComparison.InvariantCultureIgnoreCase);
-                if (isOrderCompletedPage && _googleAnalyticsSettings.EnableEcommerce && _googleAnalyticsSettings.UseJsToSendEcommerceInfo)
+                if (isOrderCompletedPage && _googleAnalyticsSettings.EnableEcommerce)
                 {
                     var lastOrder = await GetLastOrderAsync();
                     script += await GetEcommerceScriptAsync(lastOrder);

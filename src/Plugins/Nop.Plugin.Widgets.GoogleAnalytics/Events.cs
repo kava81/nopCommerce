@@ -79,7 +79,7 @@ namespace Nop.Plugin.Widgets.GoogleAnalytics
             return await _widgetPluginManager.IsPluginActiveAsync(GoogleAnalyticsDefaults.SystemName);
         }
 
-        private async Task SaveCookies(Order order, GoogleAnalyticsSettings googleAnalyticsSettings, Store store)
+        private async Task SaveCookiesAsync(Order order, GoogleAnalyticsSettings googleAnalyticsSettings, Store store)
         {
             //try to get cookie
             var httpContext = _httpContextAccessor.HttpContext;
@@ -191,23 +191,11 @@ namespace Nop.Plugin.Widgets.GoogleAnalytics
             if (!googleAnalyticsSettings.EnableEcommerce)
                 return;
 
-            bool sendRequest;
-            if (googleAnalyticsSettings.UseJsToSendEcommerceInfo)
-            {
-                //if we use JS to notify GA about new orders (even when they are placed), then we should always notify GA about deleted orders
-                //but ignore already cancelled orders (do not duplicate request to GA)
-                sendRequest = order.OrderStatus != OrderStatus.Cancelled;
-            }
-            else
-            {
-                //if we use HTTP requests to notify GA about new orders (only when they are paid), then we should notify GA about deleted AND paid orders
-                sendRequest = order.PaymentStatus == PaymentStatus.Paid;
-            }
+            //if we use HTTP requests to notify GA about new orders (only when they are paid), then we should notify GA about deleted AND paid orders
+            var sendRequest = order.PaymentStatus == PaymentStatus.Paid;
 
             if (sendRequest)
-            {
                 await ProcessOrderEventAsync(order, googleAnalyticsSettings, GoogleAnalyticsDefaults.OrderRefundedEventName);
-            }
         }
 
         /// <summary>
@@ -232,10 +220,7 @@ namespace Nop.Plugin.Widgets.GoogleAnalytics
                 return;
 
             //we use HTTP requests to notify GA about new orders (only when they are paid)
-            var sendRequest = !googleAnalyticsSettings.UseJsToSendEcommerceInfo;
-
-            if (sendRequest)
-                await ProcessOrderEventAsync(order, googleAnalyticsSettings, GoogleAnalyticsDefaults.OrderPaidEventName);
+            await ProcessOrderEventAsync(order, googleAnalyticsSettings, GoogleAnalyticsDefaults.OrderPaidEventName);
         }
 
         /// <summary>
@@ -259,13 +244,7 @@ namespace Nop.Plugin.Widgets.GoogleAnalytics
             if (!googleAnalyticsSettings.EnableEcommerce)
                 return;
 
-            //we use HTTP requests to notify GA about new orders (only when they are paid)
-            var sendRequest = !googleAnalyticsSettings.UseJsToSendEcommerceInfo;
-
-            if (sendRequest)
-            {
-                await SaveCookies(order, googleAnalyticsSettings, store);
-            }
+            await SaveCookiesAsync(order, googleAnalyticsSettings, store);
         }
     }
 }
